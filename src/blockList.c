@@ -7,11 +7,13 @@
  * Simple Linked list for block structures. I add new nodes to the front of the list because
  * when new blocks are made, they will be smaller than the block they were broken up from
  * and I want the blocks to be in increasing order to potentially reduce search time for available blocks
-
+ */
 
 #include <stdio.h>
 #include "blockList.h"
 #include "block.h"
+
+int size;
 
 
 void List_init(struct Node *head)
@@ -20,10 +22,11 @@ void List_init(struct Node *head)
 	{
 		head = NULL;
 	}
+	size = 0;
 
 }
 
-void add(struct Node *head, struct Block newBlock)
+struct Node * add(struct Node *head, struct Block newBlock)
 {
 
 	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
@@ -32,63 +35,85 @@ void add(struct Node *head, struct Block newBlock)
 		newNode->block = newBlock;
 		newNode->next = NULL;
 
-		if(head->next == NULL) //empty list
+		if(head == NULL || size == 0) //empty list
 		{
 			head = newNode;
+			size++;
+			return head;
 		}
 		else	//Add newNode to front of the list
 		{
 			newNode->next = head;
 			head = newNode;
+			size++;
+			return head;
 		}
 
 	}
 	else
 	{
 		printf("Could not create new Node to add\n");
+		return NULL;
 	}
 }
 
-void delete(blockList *bList, struct Block b)
+struct Node * delete(struct Node *head, struct Block b)
 {
-	struct Node *searchNode = bList->head;
+	int found = 0;
+	struct Node *searchNode = head;
 	if(searchNode->block.block_base == b.block_base)
 	{
-		struct Node *temp = bList->head;
-		bList->head = temp->next;
-		free(temp);
+		found = 1;
 	}
-	else
+
+	while (found == 0 && searchNode->next != NULL )
 	{
-		while(searchNode->next->block.block_base != b.block_base || searchNode->next != NULL)
+		if (searchNode->next->block.block_base == b.block_base)
 		{
-			searchNode = searchNode->next;
-		}
-		if(searchNode->next == NULL && searchNode->next->block.block_base != b.block_base)
-		{
-			printf("Node not found\n");
+			found = 1;
 		}
 		else
 		{
-			struct Node *temp = searchNode->next;
-			searchNode->next = temp->next;
-			free(temp);
+			searchNode = searchNode->next;
 		}
 	}
+	//We are either out of nodes or found a match
+	if (found == 1)
+	{
+		struct Node *temp = searchNode->next; //Node we are deleting
+		searchNode->next = temp->next;
+		free(temp);
+		size--;
+		return head;
+	}
+	else
+	{
+		printf("Node not found\n");
+		return head;
+	}
+
 }
 
-void print_list(blockList *bList)
+void print_list(struct Node *head)
 {
-	struct Node *searchNode = bList->head;
-	while(searchNode->next != NULL)
+	struct Node *searchNode = head;
+	if(head == NULL)
+	{
+		printf("NULL print\n");
+	}
+	while(searchNode != NULL)
 	{
 
-		printf("Base Address: %d", searchNode->block.block_base);
-		printf("Block size: %d", searchNode->block.block_size);
+		printf("Base Address: %d\n", searchNode->block.block_base);
+		printf("Block size: %d\n", searchNode->block.block_size);
 		printf("---------\n");
 
 		searchNode = searchNode->next;
 	}
 }
 
-*/
+void getSize()
+{
+	printf("Size: %d\n", size);
+}
+
