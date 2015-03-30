@@ -15,7 +15,12 @@ struct Node
 	struct Node *next;
 };
 
-void init();
+typedef struct
+{
+	struct Node *head;
+}blockList;
+
+void List_init();
 void add(struct Block);
 void delete(struct Block);
 void print_list();
