@@ -20,7 +20,7 @@ typedef struct
 	struct Node *head;
 }blockList;
 
-void List_init(struct Node *head);
+struct Node * List_init(struct Node *head);
 struct Node * add(struct Node *, struct Block);
 struct Node * delete(struct Node *, struct Block);
 void print_list(struct Node *);

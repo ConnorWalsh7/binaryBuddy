@@ -16,13 +16,14 @@
 int size;
 
 
-void List_init(struct Node *head)
+struct Node * List_init(struct Node *head)
 {
 	if(head != NULL)
 	{
 		head = NULL;
 	}
 	size = 0;
+	return head;
 
 }
 

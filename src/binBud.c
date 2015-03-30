@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "block.h"
-#include "blockList.h"
+//#include "blockList.h"
 #include "blockList.c"
 
 int start_memory(int size);
@@ -22,35 +22,30 @@ int *base_address = NULL;
 int total_allocations = 0;
 int current_allocations = 0;
 int initial_size = 0;
-struct Node *head;
+
+blockList freeBlocks;
+blockList usedBlocks;
 
 int main(int argc, char **argv)
 {
-	head = (struct Node *) malloc(sizeof(struct Node));
-	struct Block b1, b2, b3;
-	b1.block_base = 10;
-	b1.block_size = 2;
+	/* Setup two linked lists for Block structs to keep track of what memory is free and what memory is used */
+	freeBlocks.head = (struct Node *) malloc(sizeof(struct Node));
+	freeBlocks.head = List_init(freeBlocks.head);
 
-	b2.block_base = 13;
-	b2.block_size = 4;
-
-	b3.block_base = 18;
-	b3.block_size = 1;
-
-	//blockList *bList = (blockList *) malloc (sizeof(blockList));
-	List_init(head);
-	head = add(head, b1);
-	head = add(head, b2);
-	head = add(head, b3);
-
-	print_list(head);
-
-	head = delete(head, b2);
-	getSize();
-
-	print_list(head);
+	usedBlocks.head = (struct Node *) malloc(sizeof(struct Node));
+	usedBlocks.head = List_init(usedBlocks.head);
 
 
+	if(argc < 2)
+	{
+		printf("How much memory do you need(in bytes): ");
+		scanf("%d", &initial_size);
+	}
+	else
+	{
+		initial_size = atoi(argv[1]);
+	}
+	start_memory(initial_size);
 
 	return 0;
 }
@@ -69,13 +64,12 @@ int start_memory(int size)
 		return 0;
 	}
 
-	initial_size = size;
+	struct Block block;
+	block.block_base = (int *)&base_address;	//Is this the address we want to keep track of??
+	block.block_size = size;
 
-	struct Block bigBlock;
-	bigBlock.block_base = *base_address;
-	bigBlock.block_size = size;
-
-	//Add to LinkedList here
+	//Add to freeBlocks LinkedList here
+	freeBlocks.head = add(freeBlocks.head, block);
 
 	return 1;
 }
