@@ -16,6 +16,7 @@ void *get_memory(int size);
 void *grow_memory(int size, void *p);
 void *pregrow_memory(int size, void *p);
 void *release_memory(void *p);
+void end_memory(void);
 
 /* Global Variables */
 int *base_address = NULL;
@@ -46,6 +47,9 @@ int main(int argc, char **argv)
 		initial_size = atoi(argv[1]);
 	}
 	start_memory(initial_size);
+	print_list(freeBlocks.head);
+	end_memory();
+
 
 	return 0;
 }
@@ -65,11 +69,27 @@ int start_memory(int size)
 	}
 
 	struct Block block;
-	block.block_base = (int *)&base_address;	//Is this the address we want to keep track of??
+	block.block_base = *base_address;	//Is this the address we want to keep track of??
 	block.block_size = size;
 
 	//Add to freeBlocks LinkedList here
 	freeBlocks.head = add(freeBlocks.head, block);
 
 	return 1;
+}
+/*
+ * end_memory function will iterate through both blockLists and free any allocated resources
+ * It will also print out if there are any memory leaks
+ */
+void end_memory(void)
+{
+	while(freeBlocks.head != NULL)
+	{
+		freeBlocks.head = delete(freeBlocks.head, freeBlocks.head->block);
+	}
+	while(usedBlocks.head != NULL)
+	{
+		usedBlocks.head = delete(usedBlocks.head, usedBlocks.head->block);
+	}
+	print_list(freeBlocks.head);
 }

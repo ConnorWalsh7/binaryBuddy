@@ -62,9 +62,13 @@ struct Node * delete(struct Node *head, struct Block b)
 {
 	int found = 0;
 	struct Node *searchNode = head;
-	if(searchNode->block.block_base == b.block_base)
+	if(searchNode->block.block_base == b.block_base) //Deleting head node
 	{
-		found = 1;
+		struct Node *temp = head;
+		head = head->next;
+		free(temp);
+		size--;
+		return head;
 	}
 
 	while (found == 0 && searchNode->next != NULL )
@@ -81,11 +85,22 @@ struct Node * delete(struct Node *head, struct Block b)
 	//We are either out of nodes or found a match
 	if (found == 1)
 	{
-		struct Node *temp = searchNode->next; //Node we are deleting
-		searchNode->next = temp->next;
-		free(temp);
-		size--;
-		return head;
+		if(size == 1)
+		{
+			struct Node *temp = head;
+			head = NULL;
+			free(temp);
+			size--;
+			return head;
+		}
+		else
+		{
+			struct Node *temp = searchNode->next; //Node we are deleting
+			searchNode->next = temp->next;
+			free(temp);
+			size--;
+			return head;
+		}
 	}
 	else
 	{
@@ -100,14 +115,14 @@ void print_list(struct Node *head)
 	struct Node *searchNode = head;
 	if(head == NULL)
 	{
-		printf("NULL print\n");
+		printf("Empty List\n");
 	}
 	while(searchNode != NULL)
 	{
 
 		printf("Base Address: %d\n", searchNode->block.block_base);
 		printf("Block size: %d\n", searchNode->block.block_size);
-		printf("---------\n");
+		printf("--------------------\n");
 
 		searchNode = searchNode->next;
 	}
