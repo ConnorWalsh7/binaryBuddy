@@ -115,7 +115,8 @@ void *get_memory(int size)
 		if(searchNode->block.block_size/2 > size)
 		{
 			//Split block
-			printf("We can split this block\n");
+			int base = searchNode->block.block_base;
+			int size = searchNode->block.block_size;
 		}
 		else
 		{
