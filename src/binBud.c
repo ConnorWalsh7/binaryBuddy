@@ -22,6 +22,7 @@ void end_memory(void);
 int *base_address = NULL;
 int total_allocations = 0;
 int current_allocations = 0;
+/*Does initial size need to be of a power of 2? */
 int initial_size = 0;
 
 blockList freeBlocks;
@@ -48,7 +49,8 @@ int main(int argc, char **argv)
 	}
 	start_memory(initial_size);
 	print_list(freeBlocks.head);
-	end_memory();
+	//end_memory();
+	get_memory(1023);
 
 
 	return 0;
@@ -72,7 +74,7 @@ int start_memory(int size)
 	block.block_base = *base_address;	//Is this the address we want to keep track of??
 	block.block_size = size;
 
-	//Add to freeBlocks LinkedList here
+	//Add to freeBlocks LinkedList
 	freeBlocks.head = add(freeBlocks.head, block);
 
 	return 1;
@@ -92,4 +94,34 @@ void end_memory(void)
 		usedBlocks.head = delete(usedBlocks.head, usedBlocks.head->block);
 	}
 	print_list(freeBlocks.head);
+}
+
+void *get_memory(int size)
+{
+	struct Node *searchNode = freeBlocks.head;
+
+	/*Look through freeBlocks list and find the first block of appropriate size */
+	while(searchNode != NULL && searchNode->block.block_size < size)
+	{
+		searchNode = searchNode->next;
+
+	}
+	if(searchNode == NULL)	//reached end of list without finding a big enough block
+	{
+		printf("Not able to get requested memory\n");
+	}
+	else	//Found block big enough. Now check if we can split this block into smaller blocks
+	{
+		if(searchNode->block.block_size/2 > size)
+		{
+			//Split block
+			printf("We can split this block\n");
+		}
+		else
+		{
+			//Use full block
+			printf("Cannot split\n");
+		}
+	}
+	return NULL;
 }
