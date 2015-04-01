@@ -53,8 +53,10 @@ int main(int argc, char **argv)
 	print_list(freeBlocks.head);
 	//end_memory();
 	get_memory(62);
-	printf("\n+++++++++Split list++++++++++\n");
+	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
+	printf("\n+++++++++Used Blocks+++++++++++\n");
+	print_list(usedBlocks.head);
 
 
 	return 0;
@@ -141,10 +143,12 @@ void *get_memory(int size)
 		}
 		else
 		{
-			//We've split the blocks as much as we need
-			printf("Selected Node\n");
-			printf("Block Base: %d\n", searchNode->block.block_base);
-			printf("Block size: %d\n", searchNode->block.block_size);
+			//We've split the blocks as much as we need, remove from freeBlocks and add to usedBlocks
+			struct Block usedBlock;
+			usedBlock = searchNode->block;
+			usedBlocks.head = add(usedBlocks.head, usedBlock);
+			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
+
 
 		}
 	}
