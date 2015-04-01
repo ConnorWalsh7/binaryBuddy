@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	testBlock = get_memory(62);
 
 
-	//end_memory();
+
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
 	printf("\n+++++++++Used Blocks+++++++++++\n");
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 	printf("\n+++++++++Used Blocks+++++++++++\n");
 	print_list(usedBlocks.head);
 
+	end_memory();
 
 	return 0;
 }
@@ -113,7 +114,8 @@ void end_memory(void)
 	{
 		usedBlocks.head = delete(usedBlocks.head, usedBlocks.head->block);
 	}
-	print_list(freeBlocks.head);
+	printf("Total memory requested: %d\n", total_allocations);
+	printf("Memory still allocated at termination: %d\n", current_allocations);
 }
 
 /*
@@ -170,6 +172,8 @@ struct Block get_memory(int size)
 			usedBlock.block_size = searchNode->block.block_size;
 			usedBlocks.head = add(usedBlocks.head, usedBlock);
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
+			total_allocations+= usedBlock.block_size;
+			current_allocations += usedBlock.block_size;
 			return usedBlock;
 
 		}
@@ -191,7 +195,15 @@ void release_memory(struct Block b)
 	{
 		searchNode = searchNode->next;
 	}
-	freeBlocks.head = insert(freeBlocks.head, b, searchNode->block);
+	if(searchNode != NULL)
+	{
+		freeBlocks.head = insert(freeBlocks.head, b, searchNode->block);
+		current_allocations-= b.block_size;
+	}
+	else
+	{
+		printf("Block not found\n");
+	}
 }
 
 /*
