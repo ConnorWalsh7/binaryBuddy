@@ -38,10 +38,6 @@ int main(int argc, char **argv)
 	usedBlocks.head = (struct Node *) malloc(sizeof(struct Node));
 	usedBlocks.head = List_init(usedBlocks.head);
 
-
-
-
-
 	if(argc < 2)
 	{
 		printf("How much memory do you need(in bytes): ");
@@ -51,11 +47,12 @@ int main(int argc, char **argv)
 	{
 		initial_size = atoi(argv[1]);
 	}
-	testList();
-	//start_memory(initial_size);
-	//print_list(freeBlocks.head);
+
+	start_memory(initial_size);
+	printf("+++++++++Original List++++++++++\n");
+	print_list(freeBlocks.head);
 	//end_memory();
-	//get_memory(1023);
+	get_memory(64);
 
 
 	return 0;
@@ -117,11 +114,28 @@ void *get_memory(int size)
 	}
 	else	//Found block big enough. Now check if we can split this block into smaller blocks
 	{
-		if(searchNode->block.block_size/2 > size)
+		if(searchNode->block.block_size/2 >= size)
 		{
 			//Split block
-			int base = searchNode->block.block_base;
-			int size = searchNode->block.block_size;
+			int newBase = searchNode->block.block_base + (searchNode->block.block_size/2);
+			int newSize = searchNode->block.block_size/2;
+			//Create new block of half the size of original block
+			struct Block newBlock;
+			newBlock.block_base = newBase;
+			newBlock.block_size = newSize;
+
+			//modify original block to show it is half the size of original
+			searchNode->block.block_size = newSize;
+
+			//insert new block in front of original block
+			freeBlocks.head = insert(freeBlocks.head, newBlock, searchNode->block);
+
+			//Just testing
+			printf("\n+++++++++++Split Blocks+++++++++++++++\n");
+			print_list(freeBlocks.head);
+
+			//Call function again
+			get_memory(size);
 		}
 		else
 		{
