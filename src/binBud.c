@@ -12,10 +12,10 @@
 #include "blockList.c"
 
 int start_memory(int size);
-void *get_memory(int size);
+struct Block get_memory(int size);
 void *grow_memory(int size, void *p);
 void *pregrow_memory(int size, void *p);
-void *release_memory(void *p);
+void release_memory(struct Block);
 void end_memory(void);
 void testList();
 
@@ -52,8 +52,21 @@ int main(int argc, char **argv)
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 
-	get_memory(62);
+	struct Block testBlock;
+
+	testBlock = get_memory(62);
+
+
 	//end_memory();
+	printf("\n+++++++++Free Blocks++++++++++\n");
+	print_list(freeBlocks.head);
+	printf("\n+++++++++Used Blocks+++++++++++\n");
+	print_list(usedBlocks.head);
+
+
+	release_memory(testBlock);
+	printf("\n==========================RELEASE MEMORY======================\n");
+
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
 	printf("\n+++++++++Used Blocks+++++++++++\n");
@@ -110,9 +123,12 @@ void end_memory(void)
  * Then we create a new Block struct to add to usedBlocks, and remove that block from freeBlocks
  * function returns the pointer to that block with the base address and size
  */
-void *get_memory(int size)
+struct Block get_memory(int size)
 {
-	struct Block *usedBlock;
+	struct Block usedBlock;
+	usedBlock.block_base = -1;
+	usedBlock.block_size = -1;
+
 	struct Node *searchNode = freeBlocks.head;
 
 	/*Look through freeBlocks list and find the first block of appropriate size */
@@ -124,7 +140,7 @@ void *get_memory(int size)
 	if(searchNode == NULL)	//reached end of list without finding a big enough block
 	{
 		printf("Not able to get requested memory\n");
-		return NULL;
+		return usedBlock;
 	}
 	else	//Found block big enough. Now check if we can split this block into smaller blocks
 	{
@@ -150,15 +166,34 @@ void *get_memory(int size)
 		else
 		{
 			//We've split the blocks as much as we need, remove from freeBlocks and add to usedBlocks
-			usedBlock->block_base = searchNode->block.block_base;
-			usedBlock->block_size = searchNode->block.block_size;
-			usedBlocks.head = add(usedBlocks.head, *usedBlock);
+			usedBlock.block_base = searchNode->block.block_base;
+			usedBlock.block_size = searchNode->block.block_size;
+			usedBlocks.head = add(usedBlocks.head, usedBlock);
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
+			return usedBlock;
 
 		}
 	}
-	return usedBlock;
 }
+
+/*
+ * Find block that pointer points to
+ * remove from usedBlocks
+ * insert back into freeBlocks
+ */
+void release_memory(struct Block b)
+{
+	usedBlocks.head = delete(usedBlocks.head, b);
+
+	//Find block that should proceed this block in freeBlocks
+	struct Node *searchNode = freeBlocks.head;
+	while(searchNode != NULL && searchNode->block.block_size < b.block_size)
+	{
+		searchNode = searchNode->next;
+	}
+	freeBlocks.head = insert(freeBlocks.head, b, searchNode->block);
+}
+
 /*
  * temporary function to test list and other things in the program
  */
