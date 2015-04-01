@@ -52,7 +52,9 @@ int main(int argc, char **argv)
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 	//end_memory();
-	get_memory(64);
+	get_memory(62);
+	printf("\n+++++++++Split list++++++++++\n");
+	print_list(freeBlocks.head);
 
 
 	return 0;
@@ -131,16 +133,19 @@ void *get_memory(int size)
 			freeBlocks.head = insert(freeBlocks.head, newBlock, searchNode->block);
 
 			//Just testing
-			printf("\n+++++++++++Split Blocks+++++++++++++++\n");
-			print_list(freeBlocks.head);
+			//printf("\n+++++++++++Split Blocks+++++++++++++++\n");
+			//print_list(freeBlocks.head);
 
 			//Call function again
 			get_memory(size);
 		}
 		else
 		{
-			//Use full block
-			printf("Cannot split\n");
+			//We've split the blocks as much as we need
+			printf("Selected Node\n");
+			printf("Block Base: %d\n", searchNode->block.block_base);
+			printf("Block size: %d\n", searchNode->block.block_size);
+
 		}
 	}
 	return NULL;
