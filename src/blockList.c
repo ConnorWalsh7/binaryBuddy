@@ -58,6 +58,47 @@ struct Node * add(struct Node *head, struct Block newBlock)
 	}
 }
 
+struct Node * insert(struct Node *head, struct Block newBlock, struct Block refBlock)
+{
+	struct Node *searchNode = head;
+	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
+	newNode->block = newBlock;
+	newNode->next = NULL;
+
+	if(head->block.block_base == refBlock.block_base)
+	{
+		 newNode->next = head;
+		 head = newNode;
+		 size++;
+		 return head;
+	}
+
+	while(searchNode->next != NULL && searchNode->next->block.block_base != refBlock.block_base)
+	{
+		//printf("Comparing blocks\n");
+		//printf("Search Node block: %d\t Ref Block: %d\n", searchNode->next->block.block_base, refBlock.block_base);
+
+		searchNode = searchNode->next;
+	}
+
+	if(searchNode->next->block.block_base == refBlock.block_base)
+	{
+		//printf("Adding new node\n");
+		newNode->next = searchNode->next;
+		searchNode->next = newNode;
+		size++;
+		return head;
+	}
+	else
+	{
+		printf("Node not found, cannot insert\n");
+		return head;
+	}
+
+
+	return head;
+}
+
 struct Node * delete(struct Node *head, struct Block b)
 {
 	int found = 0;

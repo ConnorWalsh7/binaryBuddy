@@ -17,6 +17,7 @@ void *grow_memory(int size, void *p);
 void *pregrow_memory(int size, void *p);
 void *release_memory(void *p);
 void end_memory(void);
+void testList();
 
 /* Global Variables */
 int *base_address = NULL;
@@ -38,6 +39,9 @@ int main(int argc, char **argv)
 	usedBlocks.head = List_init(usedBlocks.head);
 
 
+
+
+
 	if(argc < 2)
 	{
 		printf("How much memory do you need(in bytes): ");
@@ -47,10 +51,11 @@ int main(int argc, char **argv)
 	{
 		initial_size = atoi(argv[1]);
 	}
-	start_memory(initial_size);
-	print_list(freeBlocks.head);
+	testList();
+	//start_memory(initial_size);
+	//print_list(freeBlocks.head);
 	//end_memory();
-	get_memory(1023);
+	//get_memory(1023);
 
 
 	return 0;
@@ -125,4 +130,33 @@ void *get_memory(int size)
 		}
 	}
 	return NULL;
+}
+/*
+ * temporary function to test list and other things in the program
+ */
+void testList()
+{
+	struct Block b1,b2,b3,b4;
+	b1.block_base = 0;
+	b1.block_size = 10;
+
+	b2.block_base = 10;
+	b2.block_size = 5;
+
+	b3.block_base = 15;
+	b3.block_size = 20;
+
+	b4.block_base = 50;
+	b4.block_size = 100;
+
+	freeBlocks.head = add(freeBlocks.head, b1);
+	freeBlocks.head = add(freeBlocks.head, b2);
+	freeBlocks.head = add(freeBlocks.head, b3);
+
+	print_list(freeBlocks.head);
+	printf("+++++++++++++++Inserting++++++++++++++++++\n");
+
+	freeBlocks.head = insert(freeBlocks.head, b4, b1);
+	print_list(freeBlocks.head);
+
 }
