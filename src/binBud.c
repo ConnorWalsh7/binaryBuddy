@@ -55,6 +55,9 @@ int main(int argc, char **argv)
 	struct Block testBlock;
 
 	testBlock = get_memory(62);
+	struct Block test2 = get_memory(45);
+	struct Block test3 = get_memory(15);
+
 
 
 
@@ -65,12 +68,6 @@ int main(int argc, char **argv)
 
 
 	release_memory(testBlock);
-	printf("\n==========================RELEASE MEMORY======================\n");
-
-	printf("\n+++++++++Free Blocks++++++++++\n");
-	print_list(freeBlocks.head);
-	printf("\n+++++++++Used Blocks+++++++++++\n");
-	print_list(usedBlocks.head);
 
 	end_memory();
 
@@ -109,13 +106,19 @@ void end_memory(void)
 	while(freeBlocks.head != NULL)
 	{
 		freeBlocks.head = delete(freeBlocks.head, freeBlocks.head->block);
+
 	}
 	while(usedBlocks.head != NULL)
 	{
+		current_allocations-= usedBlocks.head->block.block_size;
 		usedBlocks.head = delete(usedBlocks.head, usedBlocks.head->block);
 	}
 	printf("Total memory requested: %d\n", total_allocations);
 	printf("Memory still allocated at termination: %d\n", current_allocations);
+
+	printf("\n==============Lists after================\n");
+	print_list(freeBlocks.head);
+	print_list(usedBlocks.head);
 }
 
 /*
