@@ -51,8 +51,9 @@ int main(int argc, char **argv)
 	start_memory(initial_size);
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
-	//end_memory();
+
 	get_memory(62);
+	//end_memory();
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
 	printf("\n+++++++++Used Blocks+++++++++++\n");
@@ -102,8 +103,16 @@ void end_memory(void)
 	print_list(freeBlocks.head);
 }
 
+/*
+ * Given the size, get_memory() will first look through freeBlocks to find a big enough block.
+ * When found, it will check if the block can be split in half and still fit size requirement
+ * Function recurses repeating this process until blocks are as small as possible
+ * Then we create a new Block struct to add to usedBlocks, and remove that block from freeBlocks
+ * function returns the pointer to that block with the base address and size
+ */
 void *get_memory(int size)
 {
+	struct Block *usedBlock;
 	struct Node *searchNode = freeBlocks.head;
 
 	/*Look through freeBlocks list and find the first block of appropriate size */
@@ -115,6 +124,7 @@ void *get_memory(int size)
 	if(searchNode == NULL)	//reached end of list without finding a big enough block
 	{
 		printf("Not able to get requested memory\n");
+		return NULL;
 	}
 	else	//Found block big enough. Now check if we can split this block into smaller blocks
 	{
@@ -134,25 +144,20 @@ void *get_memory(int size)
 			//insert new block in front of original block
 			freeBlocks.head = insert(freeBlocks.head, newBlock, searchNode->block);
 
-			//Just testing
-			//printf("\n+++++++++++Split Blocks+++++++++++++++\n");
-			//print_list(freeBlocks.head);
-
-			//Call function again
+			//Call function again until blocks cannot be split
 			get_memory(size);
 		}
 		else
 		{
 			//We've split the blocks as much as we need, remove from freeBlocks and add to usedBlocks
-			struct Block usedBlock;
-			usedBlock = searchNode->block;
-			usedBlocks.head = add(usedBlocks.head, usedBlock);
+			usedBlock->block_base = searchNode->block.block_base;
+			usedBlock->block_size = searchNode->block.block_size;
+			usedBlocks.head = add(usedBlocks.head, *usedBlock);
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
-
 
 		}
 	}
-	return NULL;
+	return usedBlock;
 }
 /*
  * temporary function to test list and other things in the program
