@@ -52,9 +52,7 @@ int main(int argc, char **argv)
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 
-	struct Block testBlock;
-
-	testBlock = get_memory(62);
+	struct Block testBlock = get_memory(62);
 	struct Block test2 = get_memory(45);
 	struct Block test3 = get_memory(15);
 
@@ -66,8 +64,15 @@ int main(int argc, char **argv)
 	printf("\n+++++++++Used Blocks+++++++++++\n");
 	print_list(usedBlocks.head);
 
+	//release_memory(testBlock);
+	release_memory(test3);
+	//release_memory(test2);
 
-	release_memory(testBlock);
+
+	printf("\n+++++++++Free Blocks++++++++++\n");
+	print_list(freeBlocks.head);
+	printf("\n+++++++++Used Blocks+++++++++++\n");
+	print_list(usedBlocks.head);
 
 	end_memory();
 
@@ -97,6 +102,7 @@ int start_memory(int size)
 
 	return 1;
 }
+
 /*
  * end_memory function will iterate through both blockLists and free any allocated resources
  * It will also print out if there are any memory leaks
@@ -194,13 +200,23 @@ void release_memory(struct Block b)
 
 	//Find block that should proceed this block in freeBlocks
 	struct Node *searchNode = freeBlocks.head;
-	while(searchNode != NULL && searchNode->block.block_size < b.block_size)
+	while(searchNode != NULL && searchNode->block.block_base >= b.block_base)
 	{
 		searchNode = searchNode->next;
 	}
 	if(searchNode != NULL)
 	{
-		freeBlocks.head = insert(freeBlocks.head, b, searchNode->block);
+		//Check if block can be combined into existing block
+		int newSize = searchNode->block.block_size + b.block_size;
+		if((searchNode->block.block_base + searchNode->block.block_size) == b.block_base && !(newSize & (newSize-1)))
+		{
+			printf("Combining block\n");
+			searchNode->block.block_size = newSize;
+		}
+		else
+		{
+			freeBlocks.head = insert(freeBlocks.head, b, searchNode->block);
+		}
 		current_allocations-= b.block_size;
 	}
 	else
@@ -208,6 +224,8 @@ void release_memory(struct Block b)
 		printf("Block not found\n");
 	}
 }
+
+
 
 /*
  * temporary function to test list and other things in the program
