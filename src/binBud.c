@@ -61,7 +61,8 @@ int main(int argc, char **argv)
 	print_list(usedBlocks.head);
 
 	release_memory(testBlock);
-	release_memory(test3);
+	test3 = grow_memory(32, test3);
+	//release_memory(test3);
 	//release_memory(test2);
 
 
@@ -132,13 +133,13 @@ void end_memory(void)
  */
 struct Block get_memory(int size)
 {
-	if(size > initial_size)
-	{
-		return NULL;
-	}
 	struct Block usedBlock;
 	usedBlock.block_base = -1;
 	usedBlock.block_size = -1;
+	if(size > initial_size)
+		{
+			return usedBlock;
+		}
 
 	struct Node *searchNode = freeBlocks.head;
 
@@ -236,17 +237,23 @@ void release_memory(struct Block b)
  */
 struct Block grow_memory(int growSize, struct Block b)
 {
+	struct Block growBlock;
+	growBlock.block_base = -1;
+	growBlock.block_size = -1;
+
 	int base = b.block_base;
 	int size = b.block_size;
 
 	if(growSize > initial_size)
 	{
-		return NULL;
+		printf("Not enough memory\n");
+		return growBlock;
 	}
 	if(growSize < size)
 	{
+		printf("Attempting to reduce size of currently allocated memory block\n");
 		//Reduce space here
-		return NULL;
+		return growBlock;
 	}
 
 	struct Node *searchNode = freeBlocks.head;
@@ -261,16 +268,33 @@ struct Block grow_memory(int growSize, struct Block b)
 	else
 	{
 		//This block should proceed the given block
+		//Check if new block is big enough
 		if(searchNode->block.block_size + size >= growSize)
 		{
-			//See if we can split block and still be the right size
-			if(searchNode->block.block_size/2 + size >+ growSize)
-			{
-				//split block
-			}
+			//Should check if block can be split
+			//Increase size of current block
+			b.block_size += searchNode->block.block_size;
+			//Update global allocation trackers
+			current_allocations += searchNode->block.block_size;
+			total_allocations += searchNode->block.block_size;
+			//remove the new block from freeBlocks
+			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
+			return b;
+
+
+		}
+		//If not check if next block can be combined to create enough space
+		else if(searchNode->next->block.block_base == searchNode->block.block_base + searchNode->block.block_size
+				&& searchNode->next->block.block_size + searchNode->block.block_size + size >= growSize)
+		{
+			//delete the two blocks and combine them into the current block
+		}
+		else
+		{
+			//Look for new memory space
 		}
 	}
-	return NULL;
+	return growBlock;
 
 
 }
