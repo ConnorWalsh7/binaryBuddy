@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		initial_size = atoi(argv[1]);
 	}
 
-	start_memory(initial_size);
+/*	start_memory(initial_size);
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 
@@ -72,6 +72,8 @@ int main(int argc, char **argv)
 	print_list(usedBlocks.head);
 
 	end_memory();
+	*/
+	testList();
 
 	return 0;
 }
@@ -241,8 +243,19 @@ struct Block grow_memory(int growSize, struct Block b)
 	growBlock.block_base = -1;
 	growBlock.block_size = -1;
 
-	int base = b.block_base;
-	int size = b.block_size;
+	struct Node *refNode = usedBlocks.head;
+	while(refNode != NULL && refNode->block.block_base != b.block_base)
+	{
+		refNode = refNode->next;
+	}
+	if(refNode == NULL)
+	{
+		printf("reference block does not exist\n");
+		return growBlock;
+	}
+
+	int base = refNode->block.block_base;
+	int size = refNode->block.block_size;
 
 	if(growSize > initial_size)
 	{
@@ -257,6 +270,7 @@ struct Block grow_memory(int growSize, struct Block b)
 	}
 
 	struct Node *searchNode = freeBlocks.head;
+	/*Looking for block of memory that comes after referenced block */
 	while(searchNode != NULL && searchNode->block.block_base != (base+size))
 	{
 		searchNode = searchNode->next;
@@ -267,23 +281,24 @@ struct Block grow_memory(int growSize, struct Block b)
 	}
 	else
 	{
-		//This block should proceed the given block
-		//Check if new block is big enough
+		/*This block should proceed the reference block
+		 * Check if new block is big enough
+		 */
 		if(searchNode->block.block_size + size >= growSize)
 		{
 			//Should check if block can be split
-			//Increase size of current block
-			b.block_size += searchNode->block.block_size;
-			//Update global allocation trackers
+			/*Increase size of current block */
+			refNode->block.block_size += searchNode->block.block_size;
+
+			/*Update global allocation trackers*/
 			current_allocations += searchNode->block.block_size;
 			total_allocations += searchNode->block.block_size;
-			//remove the new block from freeBlocks
+			/* remove the new block from freeBlocks */
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
-			return b;
-
-
+			return refNode->block;
 		}
-		//If not check if next block can be combined to create enough space
+
+		/* If not check if next block can be combined to create enough space */
 		else if(searchNode->next->block.block_base == searchNode->block.block_base + searchNode->block.block_size
 				&& searchNode->next->block.block_size + searchNode->block.block_size + size >= growSize)
 		{
@@ -295,8 +310,6 @@ struct Block grow_memory(int growSize, struct Block b)
 		}
 	}
 	return growBlock;
-
-
 }
 
 /*
@@ -304,7 +317,7 @@ struct Block grow_memory(int growSize, struct Block b)
  */
 void testList()
 {
-	struct Block b1,b2,b3,b4;
+	struct Block b1,b2,b3,b4,b5;
 	b1.block_base = 0;
 	b1.block_size = 10;
 
@@ -314,17 +327,38 @@ void testList()
 	b3.block_base = 15;
 	b3.block_size = 20;
 
-	b4.block_base = 50;
+	b4.block_base = 35;
 	b4.block_size = 100;
+
+	b5.block_base = 135;
+	b5.block_size = 40;
+
+
 
 	freeBlocks.head = add(freeBlocks.head, b1);
 	freeBlocks.head = add(freeBlocks.head, b2);
-	freeBlocks.head = add(freeBlocks.head, b3);
+	freeBlocks.head = add(freeBlocks.head, b4);
+	freeBlocks.head = add(freeBlocks.head, b5);
 
-	print_list(freeBlocks.head);
-	printf("+++++++++++++++Inserting++++++++++++++++++\n");
+	usedBlocks.head = add(usedBlocks.head, b3);
 
-	freeBlocks.head = insert(freeBlocks.head, b4, b1);
+	printf("======Free Blocks======\n");
 	print_list(freeBlocks.head);
+
+	printf("\n======Used Blocks=====\n");
+	print_list(usedBlocks.head);
+
+	printf("\nGrowing Memory\n");
+	b3 = grow_memory(30, b3);
+
+
+	printf("======Free Blocks======\n");
+	print_list(freeBlocks.head);
+
+	printf("\n======Used Blocks=====\n");
+	print_list(usedBlocks.head);
+
+	end_memory();
+
 
 }
