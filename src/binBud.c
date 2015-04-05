@@ -8,13 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "block.h"
-//#include "blockList.h"
 #include "blockList.c"
 
 int start_memory(int size);
 struct Block get_memory(int size);
-void *grow_memory(int size, void *p);
-void *pregrow_memory(int size, void *p);
+struct Block grow_memory(int size, struct Block);
+void pregrow_memory(int size, struct Block);
 void release_memory(struct Block);
 void end_memory(void);
 void testList();
@@ -56,15 +55,12 @@ int main(int argc, char **argv)
 	struct Block test2 = get_memory(45);
 	struct Block test3 = get_memory(15);
 
-
-
-
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
 	printf("\n+++++++++Used Blocks+++++++++++\n");
 	print_list(usedBlocks.head);
 
-	//release_memory(testBlock);
+	release_memory(testBlock);
 	release_memory(test3);
 	//release_memory(test2);
 
@@ -136,6 +132,10 @@ void end_memory(void)
  */
 struct Block get_memory(int size)
 {
+	if(size > initial_size)
+	{
+		return NULL;
+	}
 	struct Block usedBlock;
 	usedBlock.block_base = -1;
 	usedBlock.block_size = -1;
@@ -206,7 +206,9 @@ void release_memory(struct Block b)
 	}
 	if(searchNode != NULL)
 	{
-		//Check if block can be combined into existing block
+		/*Check if block can be combined into existing block
+		 * Base address's must be in order and new size of block must be a power of 2
+		 */
 		int newSize = searchNode->block.block_size + b.block_size;
 		if((searchNode->block.block_base + searchNode->block.block_size) == b.block_base && !(newSize & (newSize-1)))
 		{
@@ -225,7 +227,53 @@ void release_memory(struct Block b)
 	}
 }
 
+/*
+ * Look through freeBlocks list and see if the next block is available
+ * If available, check if size is enough
+ * If not, look for a different block of appropriate size
+ * copy contents from existing block to new block
+ * return new block
+ */
+struct Block grow_memory(int growSize, struct Block b)
+{
+	int base = b.block_base;
+	int size = b.block_size;
 
+	if(growSize > initial_size)
+	{
+		return NULL;
+	}
+	if(growSize < size)
+	{
+		//Reduce space here
+		return NULL;
+	}
+
+	struct Node *searchNode = freeBlocks.head;
+	while(searchNode != NULL && searchNode->block.block_base != (base+size))
+	{
+		searchNode = searchNode->next;
+	}
+	if(searchNode == NULL)
+	{
+		printf("Cannot expand block, will try to find new memory space\n");
+	}
+	else
+	{
+		//This block should proceed the given block
+		if(searchNode->block.block_size + size >= growSize)
+		{
+			//See if we can split block and still be the right size
+			if(searchNode->block.block_size/2 + size >+ growSize)
+			{
+				//split block
+			}
+		}
+	}
+	return NULL;
+
+
+}
 
 /*
  * temporary function to test list and other things in the program
