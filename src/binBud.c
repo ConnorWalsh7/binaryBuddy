@@ -11,8 +11,8 @@
 #include "blockList.c"
 
 int start_memory(int size);
-struct Block get_memory(int size);
-struct Block grow_memory(int size, struct Block);
+void *get_memory(int size);
+void *grow_memory(int size, struct Block);
 void pregrow_memory(int size, struct Block);
 void release_memory(struct Block);
 void end_memory(void);
@@ -47,21 +47,22 @@ int main(int argc, char **argv)
 		initial_size = atoi(argv[1]);
 	}
 
-/*	start_memory(initial_size);
+	start_memory(initial_size);
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 
-	struct Block testBlock = get_memory(62);
-	struct Block test2 = get_memory(45);
-	struct Block test3 = get_memory(15);
+	int *ptr;
+	ptr = get_memory(62);
+	ptr = get_memory(45);
+	ptr = get_memory(15);
 
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
 	printf("\n+++++++++Used Blocks+++++++++++\n");
 	print_list(usedBlocks.head);
 
-	release_memory(testBlock);
-	test3 = grow_memory(32, test3);
+	//release_memory(testBlock);
+	//test3 = grow_memory(32, test3);
 	//release_memory(test3);
 	//release_memory(test2);
 
@@ -72,8 +73,8 @@ int main(int argc, char **argv)
 	print_list(usedBlocks.head);
 
 	end_memory();
-	*/
-	testList();
+
+
 
 	return 0;
 }
@@ -133,14 +134,14 @@ void end_memory(void)
  * Then we create a new Block struct to add to usedBlocks, and remove that block from freeBlocks
  * function returns the pointer to that block with the base address and size
  */
-struct Block get_memory(int size)
+void *get_memory(int size)
 {
 	struct Block usedBlock;
 	usedBlock.block_base = -1;
 	usedBlock.block_size = -1;
 	if(size > initial_size)
 		{
-			return usedBlock;
+			return (int *)usedBlock.block_base;
 		}
 
 	struct Node *searchNode = freeBlocks.head;
@@ -154,7 +155,7 @@ struct Block get_memory(int size)
 	if(searchNode == NULL)	//reached end of list without finding a big enough block
 	{
 		printf("Not able to get requested memory\n");
-		return usedBlock;
+		return (int *)usedBlock.block_base;
 	}
 	else	//Found block big enough. Now check if we can split this block into smaller blocks
 	{
@@ -186,7 +187,7 @@ struct Block get_memory(int size)
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
 			total_allocations+= usedBlock.block_size;
 			current_allocations += usedBlock.block_size;
-			return usedBlock;
+			return (int *)usedBlock.block_base;
 
 		}
 	}
@@ -237,12 +238,10 @@ void release_memory(struct Block b)
  * copy contents from existing block to new block
  * return new block
  */
-struct Block grow_memory(int growSize, struct Block b)
+void *grow_memory(int growSize, struct Block b)
 {
-	struct Block growBlock;
-	growBlock.block_base = -1;
-	growBlock.block_size = -1;
 
+	/* find referenced block in usedBlocks list to make sure it exists */
 	struct Node *refNode = usedBlocks.head;
 	while(refNode != NULL && refNode->block.block_base != b.block_base)
 	{
@@ -251,7 +250,7 @@ struct Block grow_memory(int growSize, struct Block b)
 	if(refNode == NULL)
 	{
 		printf("reference block does not exist\n");
-		return growBlock;
+		return NULL;
 	}
 
 	int base = refNode->block.block_base;
@@ -260,17 +259,37 @@ struct Block grow_memory(int growSize, struct Block b)
 	if(growSize > initial_size)
 	{
 		printf("Not enough memory\n");
-		return growBlock;
+		return NULL;
 	}
-	if(growSize < size)
+	/* If user requests less memory than they have, see if we can split the block */
+	if(growSize <= size/2)
 	{
-		printf("Attempting to reduce size of currently allocated memory block\n");
-		//Reduce space here
-		return growBlock;
+		printf("Reducing size of memory block\n");
+		struct Block splitBlock;
+		splitBlock.block_base = base+size/2;
+		splitBlock.block_size = size/2;
+
+		/*Find where to insert new free block into freeBlocks list */
+		refNode = freeBlocks.head;
+		while(refNode != NULL && refNode->block.block_base > splitBlock.block_base)
+		{
+			refNode = refNode->next;
+		}
+		if(refNode != NULL)
+		{
+			freeBlocks.head = insert(freeBlocks.head, splitBlock, refNode->block);
+		}
+		else
+		{
+			printf("Cannot split block and add to freeBlocks list\n");
+			return NULL;
+		}
+		return (int *)base;
 	}
 
 	struct Node *searchNode = freeBlocks.head;
-	/*Looking for block of memory that comes after referenced block */
+
+	/*Looking for block of memory that comes after referenced block to expand into */
 	while(searchNode != NULL && searchNode->block.block_base != (base+size))
 	{
 		searchNode = searchNode->next;
@@ -286,7 +305,6 @@ struct Block grow_memory(int growSize, struct Block b)
 		 */
 		if(searchNode->block.block_size + size >= growSize)
 		{
-			//Should check if block can be split
 			/*Increase size of current block */
 			refNode->block.block_size += searchNode->block.block_size;
 
@@ -295,21 +313,24 @@ struct Block grow_memory(int growSize, struct Block b)
 			total_allocations += searchNode->block.block_size;
 			/* remove the new block from freeBlocks */
 			freeBlocks.head = delete(freeBlocks.head, searchNode->block);
-			return refNode->block;
+			return (int *)refNode->block.block_base;
 		}
 
-		/* If not check if next block can be combined to create enough space */
-		else if(searchNode->next->block.block_base == searchNode->block.block_base + searchNode->block.block_size
-				&& searchNode->next->block.block_size + searchNode->block.block_size + size >= growSize)
-		{
-			//delete the two blocks and combine them into the current block
-		}
-		else
-		{
-			//Look for new memory space
-		}
 	}
-	return growBlock;
+	/* Look for new memory space */
+	searchNode = freeBlocks.head;
+	while(searchNode != NULL && searchNode->block.block_size < growSize)
+	{
+		searchNode = searchNode->next;
+	}
+	if(searchNode == NULL)
+	{
+		printf("Not enough memory to copy over data\n");
+		return NULL;
+	}
+	/* Found a block big enough to copy over users data */
+
+	return NULL;
 }
 
 /*
@@ -317,6 +338,7 @@ struct Block grow_memory(int growSize, struct Block b)
  */
 void testList()
 {
+	/*
 	struct Block b1,b2,b3,b4,b5;
 	b1.block_base = 0;
 	b1.block_size = 10;
@@ -359,6 +381,7 @@ void testList()
 	print_list(usedBlocks.head);
 
 	end_memory();
+	*/
 
 
 }
