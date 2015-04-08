@@ -22,15 +22,14 @@ void testList();
 int *base_address = NULL;
 int total_allocations = 0;
 int current_allocations = 0;
-/*Does initial size need to be of a power of 2? */
 int initial_size = 0;
 
+/*Linked lists to keep track of free and used blocks of memory */
 blockList freeBlocks;
 blockList usedBlocks;
 
 int main(int argc, char **argv)
 {
-	/* Setup two linked lists for Block structs to keep track of what memory is free and what memory is used */
 	freeBlocks.head = (struct Node *) malloc(sizeof(struct Node));
 	freeBlocks.head = List_init(freeBlocks.head);
 
@@ -64,21 +63,7 @@ int main(int argc, char **argv)
 	printf("\n+++++++++Used Blocks+++++++++++\n");
 	print_list(usedBlocks.head);
 
-	//release_memory(testBlock);
-	//test3 = grow_memory(32, test3);
-	//release_memory(test3);
-	//release_memory(test2);
-
-
-	printf("\n+++++++++Free Blocks++++++++++\n");
-	print_list(freeBlocks.head);
-	printf("\n+++++++++Used Blocks+++++++++++\n");
-	print_list(usedBlocks.head);
-
 	end_memory();
-
-
-
 	return 0;
 }
 
