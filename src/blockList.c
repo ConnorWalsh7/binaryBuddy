@@ -164,8 +164,4 @@ void print_list(struct Node *head)
 	}
 }
 
-void getSize()
-{
-	printf("Size: %d\n", size);
-}
 

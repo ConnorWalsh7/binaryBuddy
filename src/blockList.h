@@ -41,10 +41,6 @@ struct Node * delete(struct Node *, struct Block);
  * iterates through the provided list and prints contents to output
  */
 void print_list(struct Node *);
-/*
- * returns size of list
- */
-void getSize();
 
 
 #endif /* BLOCKLIST_H_ */

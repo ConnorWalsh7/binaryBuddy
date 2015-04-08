@@ -14,9 +14,8 @@ int start_memory(int size);
 void *get_memory(int size);
 void *grow_memory(int size, void *);
 void *pregrow_memory(int size, void *);
-void release_memory(struct Block);
+void release_memory(void *);
 void end_memory(void);
-void testList();
 
 /* Global Variables */
 int *base_address = NULL;
@@ -82,7 +81,7 @@ int start_memory(int size)
 	}
 
 	struct Block block;
-	block.block_base = *base_address;	//Is this the address we want to keep track of??
+	block.block_base = *base_address;
 	block.block_size = size;
 
 	//Add to freeBlocks LinkedList
@@ -110,9 +109,6 @@ void end_memory(void)
 	printf("Total memory requested: %d\n", total_allocations);
 	printf("Memory still allocated at termination: %d\n", current_allocations);
 
-	printf("\n==============Lists after================\n");
-	print_list(freeBlocks.head);
-	print_list(usedBlocks.head);
 }
 
 /*
@@ -186,12 +182,26 @@ void *get_memory(int size)
  * remove from usedBlocks
  * insert back into freeBlocks
  */
-void release_memory(struct Block b)
+void release_memory(void *p)
 {
+	/* Find block referenced by p */
+	int base = (int)p;
+	struct Node *searchNode = usedBlocks.head;
+	while(searchNode != NULL && searchNode->block.block_base != base)
+	{
+		searchNode = searchNode->next;
+	}
+	if (searchNode == NULL)
+	{
+		printf("Could not find block\n");
+		return;
+	}
+	struct Block b = searchNode->block;
+
 	usedBlocks.head = delete(usedBlocks.head, b);
 
 	//Find block that should proceed this block in freeBlocks
-	struct Node *searchNode = freeBlocks.head;
+	searchNode = freeBlocks.head;
 	while(searchNode != NULL && searchNode->block.block_base >= b.block_base)
 	{
 		searchNode = searchNode->next;
@@ -414,55 +424,4 @@ void *pregrow_memory(int growSize, void *p)
 
 
 }
-/*
- * temporary function to test list and other things in the program
- */
-void testList()
-{
-	/*
-	struct Block b1,b2,b3,b4,b5;
-	b1.block_base = 0;
-	b1.block_size = 10;
 
-	b2.block_base = 10;
-	b2.block_size = 5;
-
-	b3.block_base = 15;
-	b3.block_size = 20;
-
-	b4.block_base = 35;
-	b4.block_size = 100;
-
-	b5.block_base = 135;
-	b5.block_size = 40;
-
-
-
-	freeBlocks.head = add(freeBlocks.head, b1);
-	freeBlocks.head = add(freeBlocks.head, b2);
-	freeBlocks.head = add(freeBlocks.head, b4);
-	freeBlocks.head = add(freeBlocks.head, b5);
-
-	usedBlocks.head = add(usedBlocks.head, b3);
-
-	printf("======Free Blocks======\n");
-	print_list(freeBlocks.head);
-
-	printf("\n======Used Blocks=====\n");
-	print_list(usedBlocks.head);
-
-	printf("\nGrowing Memory\n");
-	b3 = grow_memory(30, b3);
-
-
-	printf("======Free Blocks======\n");
-	print_list(freeBlocks.head);
-
-	printf("\n======Used Blocks=====\n");
-	print_list(usedBlocks.head);
-
-	end_memory();
-	*/
-
-
-}
