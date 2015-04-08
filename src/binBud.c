@@ -12,8 +12,8 @@
 
 int start_memory(int size);
 void *get_memory(int size);
-void *grow_memory(int size, struct Block);
-void pregrow_memory(int size, struct Block);
+void *grow_memory(int size, void *);
+void *pregrow_memory(int size, void *);
 void release_memory(struct Block);
 void end_memory(void);
 void testList();
@@ -51,10 +51,13 @@ int main(int argc, char **argv)
 	printf("+++++++++Original List++++++++++\n");
 	print_list(freeBlocks.head);
 
-	int *ptr;
-	ptr = get_memory(62);
-	ptr = get_memory(45);
-	ptr = get_memory(15);
+	int* b1,b2,b3;
+	b1 = get_memory(62);
+	b2 = get_memory(45);
+	b3 = get_memory(15);
+
+	b3 = grow_memory(32, b3);
+	b2 = pregrow_memory(16, b2);
 
 	printf("\n+++++++++Free Blocks++++++++++\n");
 	print_list(freeBlocks.head);
@@ -238,12 +241,14 @@ void release_memory(struct Block b)
  * copy contents from existing block to new block
  * return new block
  */
-void *grow_memory(int growSize, struct Block b)
+void *grow_memory(int growSize, void *p)
 {
+	int *bp = (int *)p;
+	int baseVal = (int)bp;
 
 	/* find referenced block in usedBlocks list to make sure it exists */
 	struct Node *refNode = usedBlocks.head;
-	while(refNode != NULL && refNode->block.block_base != b.block_base)
+	while(refNode != NULL && refNode->block.block_base != baseVal)
 	{
 		refNode = refNode->next;
 	}
@@ -333,7 +338,7 @@ void *grow_memory(int growSize, struct Block b)
 	 */
 	int* dest,src;
 	dest = (int *)searchNode->block.block_base;
-	src = (int *)b.block_base;
+	src = bp;
 
 	int i;
 	for(i = 0; i<= size; i++)
@@ -346,8 +351,9 @@ void *grow_memory(int growSize, struct Block b)
 	return (int *)searchNode->block.block_base;
 }
 
-void *pregrow_memory(int growSize, void *b)
+void *pregrow_memory(int growSize, void *p)
 {
+	int *b = (int *)p;
 	if(growSize > initial_size)
 	{
 		printf("Not enough memory\n");
@@ -355,7 +361,7 @@ void *pregrow_memory(int growSize, void *b)
 	}
 
 	/*Find referenced block */
-	int base = *b;
+	int base = (int)b;
 	struct Node *refNode = usedBlocks.head;
 	while(refNode != NULL && refNode->block.block_base != base)
 	{
@@ -379,6 +385,45 @@ void *pregrow_memory(int growSize, void *b)
 	{
 		refNode = refNode->next;
 	}
+	if(refNode != NULL)
+	{
+		/* Check if size is big enough */
+		if(refNode->block.block_size + refBlock.block_size >= growSize)
+		{
+			struct Block newBlock = refNode->block;
+			newBlock.block_size += refBlock.block_size;
+			freeBlocks.head = delete(freeBlocks.head, newBlock);
+			usedBlocks.head = delete(usedBlocks.head, refBlock);
+			usedBlocks.head = add(usedBlocks.head, newBlock);
+			return (int *)newBlock.block_base;
+		}
+	}
+
+	/* Look for a new block big enough for size requested */
+	refNode = freeBlocks.head;
+	while(refNode != NULL && refNode->block.block_size < growSize)
+	{
+		refNode = refNode->next;
+	}
+	if(refNode == NULL)
+	{
+		printf("Could not find big enough block of memory\n");
+		return NULL;
+	}
+
+	/*Copy data from old pointer to new pointer loction */
+	struct Block newBlock = refNode->block;
+	/*Start at the old blocks size into the new block, so the free memory is before it */
+	int *dest = (int *)newBlock.block_base+refBlock.block_size;
+	int *src = (int *)refBlock.block_base;
+	int i;
+	for(i=0; i<=refBlock.block_size; i++)
+	{
+		dest = src;
+		dest++;
+		src++;
+	}
+	return (int *)newBlock.block_base;
 
 
 
