@@ -328,11 +328,62 @@ void *grow_memory(int growSize, struct Block b)
 		printf("Not enough memory to copy over data\n");
 		return NULL;
 	}
-	/* Found a block big enough to copy over users data */
+	/* Found a block big enough to copy over users data
+	 *  Start at old pointer address and start copying data to new address
+	 */
+	int* dest,src;
+	dest = (int *)searchNode->block.block_base;
+	src = (int *)b.block_base;
 
-	return NULL;
+	int i;
+	for(i = 0; i<= size; i++)
+	{
+		dest = src;
+		dest++;
+		src++;
+	}
+
+	return (int *)searchNode->block.block_base;
 }
 
+void *pregrow_memory(int growSize, void *b)
+{
+	if(growSize > initial_size)
+	{
+		printf("Not enough memory\n");
+		return NULL;
+	}
+
+	/*Find referenced block */
+	int base = *b;
+	struct Node *refNode = usedBlocks.head;
+	while(refNode != NULL && refNode->block.block_base != base)
+	{
+		refNode = refNode->next;
+	}
+	if(refNode == NULL)
+	{
+		printf("Could not find referenced block\n");
+		return NULL;
+	}
+	struct Block refBlock = refNode->block;
+	if(growSize < refBlock.block_size)
+	{
+		//Reduce size here
+		return (int *)refBlock.block_base;
+	}
+
+	/*Find block that should come before refBlock */
+	refNode = freeBlocks.head;
+	while(refNode != NULL && refNode->block.block_base + refNode->block.block_size != refBlock.block_base)
+	{
+		refNode = refNode->next;
+	}
+
+
+
+
+}
 /*
  * temporary function to test list and other things in the program
  */
